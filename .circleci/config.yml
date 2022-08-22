@@ -1,43 +1,23 @@
 version: 2
 jobs:
-  build-postgres:
+  build-and-test:
     docker:
       - image: cimg/postgres:14.0
         environment:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
           POSTGRES_DB: newsletter
-          TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/newsletter
-    steps:
-      - checkout
-      - run: sudo apt-get update
-      - run: sudo apt-get install postgresql-client
-      - run: whoami
-      - run:
-          name: install dockerize
-          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-          environment:
-            DOCKERIZE_VERSION: v0.6.1
-      - run:
-          name: wait for db
-          command: dockerize -wait tcp://localhost:5432 -timeout 1m
-      - run: |
-          psql \
-          -d $TEST_DATABASE_URL \
-          -c "CREATE TABLE test (name char(25));"
-      - run: |
-          psql \
-          -d $TEST_DATABASE_URL \
-          -c "INSERT INTO test VALUES ('John'), ('Joanna'), ('Jennifer');"
-
-  build-and-test:
-    docker:
+          POSTGRES_PORT: 5432
+          POSTGRES_PASSWORD: password
+          SQLX_VERSION: 0.5.7
+          SQLX_FEATURES: postgres
       - image: cimg/rust:1.62.1
     environment:
       # Fail the build if there are warnings
       RUSTFLAGS: '-D warnings'
     steps:
       - checkout
+      - run: sudo apt-get update
+      - run: sudo apt-get install postgresql-client
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version
@@ -49,6 +29,10 @@ jobs:
       - restore_cache:
           keys:
             - v1-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
+      - run:
+          name: Install sqlx-cli
+          command: cargo install --version=$SQLX_VERSION sqlx-cli --no-default-features --features $SQLX_FEATURES
+      - run: sqlx --help
       - run:
           name: Build all targets
           command: cargo build
@@ -134,7 +118,6 @@ workflows:
   version: 2
   build-test:
     jobs:
-      - build-postgres
       - build-and-test:
           filters:
             tags:
