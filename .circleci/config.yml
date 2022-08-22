@@ -39,13 +39,13 @@ jobs:
       - run:
           name: Build all targets
           command: cargo build
-      - save_cache:
-          paths:
-            - /usr/local/cargo/registry
-            - target/debug/.fingerprint
-            - target/debug/build
-            - target/debug/deps
-          key: v1-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
+#      - save_cache:
+#          paths:
+#            - /usr/local/cargo/registry
+#            - target/debug/.fingerprint
+#            - target/debug/build
+#            - target/debug/deps
+#          key: v1-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
       - run:
           name: Run all tests
           command: cargo test
@@ -71,10 +71,10 @@ jobs:
       - run:
           name: Install dependency auditing tool
           command: cargo install cargo-audit
-      - save_cache:
-          paths:
-            - /usr/local/cargo
-          key: v2-cargo-audit-{{ arch }}
+#      - save_cache:
+#          paths:
+#            - /usr/local/cargo
+#          key: v2-cargo-audit-{{ arch }}
       - run:
           name: Check for known security issues in dependencies
           command: cargo audit
@@ -97,11 +97,29 @@ jobs:
   lint:
     docker:
       - image: cimg/rust:1.62.1
+        environment:
+          SQLX_VERSION: 0.5.7
+          SQLX_FEATURES: postgres
+      - image: cimg/postgres:14.0
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: newsletter
+          POSTGRES_PORT: 5432
+          POSTGRES_PASSWORD: password
     steps:
       - checkout
+      - run: sudo apt-get update
+      - run: sudo apt-get install postgresql-client
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version
+      - run:
+          name: Install sqlx-cli
+          command: cargo install --version=$SQLX_VERSION sqlx-cli --no-default-features --features $SQLX_FEATURES
+      - run:
+          name: Migrate DB
+          command: |
+            SKIP_DOCKER=true ./scripts/init_db.sh
       - run:
           name: Install Clippy
           command: rustup component add clippy
