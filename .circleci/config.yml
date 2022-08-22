@@ -6,14 +6,14 @@ jobs:
         environment:
           # Fail the build if there are warnings
           RUSTFLAGS: '-D warnings'
+          SQLX_VERSION: 0.5.7
+          SQLX_FEATURES: postgres
       - image: cimg/postgres:14.0
         environment:
           POSTGRES_USER: postgres
           POSTGRES_DB: newsletter
           POSTGRES_PORT: 5432
           POSTGRES_PASSWORD: password
-          SQLX_VERSION: 0.5.7
-          SQLX_FEATURES: postgres
     steps:
       - checkout
       - run: sudo apt-get update
