@@ -32,7 +32,10 @@ jobs:
       - run:
           name: Install sqlx-cli
           command: cargo install --version=$SQLX_VERSION sqlx-cli --no-default-features --features $SQLX_FEATURES
-      - run: sqlx --help
+      - run:
+          name: Migrate DB
+          command: |
+            SKIP_DOCKER=true ./scripts/init_db.sh
       - run:
           name: Build all targets
           command: cargo build
