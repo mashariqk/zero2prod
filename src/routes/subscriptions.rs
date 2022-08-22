@@ -1,6 +1,4 @@
-use actix_web::dev::Server;
-use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use std::net::TcpListener;
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
 
 pub async fn greet(req: HttpRequest) -> impl Responder {
     let name = req.match_info().get("name").unwrap_or("World");
@@ -8,6 +6,7 @@ pub async fn greet(req: HttpRequest) -> impl Responder {
 }
 
 #[derive(serde::Deserialize)]
+#[allow(dead_code)]
 pub struct SubscribeForm {
     email: String,
     name: String,
