@@ -36,9 +36,6 @@ jobs:
           name: Install Clippy
           command: rustup component add clippy
       - run:
-          name: Install Tarpaulin
-          command: cargo install cargo-tarpaulin
-      - run:
           name: Install formatter
           command: rustup component add rustfmt
       - run:
@@ -54,9 +51,6 @@ jobs:
       - run:
           name: Linting
           command: cargo clippy -- -D warnings
-      - run:
-          name: Coverage
-          command: cargo tarpaulin --ignore-tests
       - run:
           name: Build all targets
           command: cargo build
