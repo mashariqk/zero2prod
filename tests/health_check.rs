@@ -1,5 +1,7 @@
-use sqlx::{Connection, PgConnection, PgPool};
 use std::net::TcpListener;
+
+use sqlx::PgPool;
+
 use zero2prod::configuration::get_configuration;
 
 pub struct TestApp {
@@ -25,11 +27,6 @@ async fn health_check_test() {
 async fn subscribe_success_test() {
     let test_app = spawn_app().await;
     let uri = test_app.address;
-    let config = get_configuration().expect("failed to get config");
-    let connection_string = config.database.connection_string();
-    let mut conn = PgConnection::connect(&connection_string)
-        .await
-        .expect("DB conn failed");
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let response = client
@@ -41,7 +38,7 @@ async fn subscribe_success_test() {
     assert_eq!(response.unwrap().status().as_u16(), 200);
 
     let saved = sqlx::query!("SELECT email, name FROM subscriptions")
-        .fetch_one(&mut conn)
+        .fetch_one(&test_app.db_pool)
         .await
         .expect("No Sub");
     assert_eq!(saved.email, "ursula_le_guin@gmail.com");

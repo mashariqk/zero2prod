@@ -1,7 +1,8 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use chrono::Utc;
+use sqlx::types::Uuid;
 use sqlx::PgPool;
-use uuid::Uuid;
+use time::OffsetDateTime;
+use uuid::Uuid as u;
 
 pub async fn greet(req: HttpRequest) -> impl Responder {
     let name = req.match_info().get("name").unwrap_or("World");
@@ -16,15 +17,16 @@ pub struct SubscribeForm {
 }
 
 pub async fn subscribe(form: web::Form<SubscribeForm>, conn: web::Data<PgPool>) -> impl Responder {
+    let uuid = Uuid::from_bytes(*u::new_v4().as_bytes());
     match sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
     VALUES ($1, $2, $3, $4)
     "#,
-        Uuid::new_v4(),
+        uuid,
         form.email,
         form.name,
-        Utc::now()
+        OffsetDateTime::now_utc()
     )
     .execute(conn.get_ref())
     .await
