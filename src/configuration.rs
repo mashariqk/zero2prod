@@ -1,3 +1,5 @@
+use secrecy::ExposeSecret;
+
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     // Initialise our configuration reader
     let mut settings = config::Config::default();
@@ -19,14 +21,18 @@ pub struct DatabaseSettings {
     pub password: String,
     pub port: u16,
     pub host: String,
-    pub database_name: String,
+    pub database_name: secrecy::Secret<String>,
 }
 
 impl DatabaseSettings {
     pub fn connection_string(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
-            self.username, self.password, self.host, self.port, self.database_name
+            self.username,
+            self.password,
+            self.host,
+            self.port,
+            self.database_name.expose_secret()
         )
     }
 

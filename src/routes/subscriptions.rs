@@ -18,7 +18,7 @@ pub struct SubscribeForm {
 
 #[tracing::instrument(name = "Adding a new sub."
                     ,skip(form,conn)
-                    ,fields(req_id = %u::new_v4(),subscriber_email = %form.email,subscriber_name= %form.name))]
+                    ,fields(subscriber_email = %form.email,subscriber_name= %form.name))]
 pub async fn subscribe(form: web::Form<SubscribeForm>, conn: web::Data<PgPool>) -> impl Responder {
     match persist_sub(form, conn).await {
         Ok(_) => HttpResponse::Ok().finish(),
