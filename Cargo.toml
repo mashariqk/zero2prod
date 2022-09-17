@@ -33,7 +33,8 @@ features=[
     "postgres",
     "uuid",
     "time",
-    "migrate"
+    "migrate",
+    "offline"
 ]
 [dependencies.uuid]
 version = "0.8.1"
