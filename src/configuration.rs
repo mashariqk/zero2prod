@@ -17,29 +17,32 @@ pub struct Settings {
 
 #[derive(serde::Deserialize)]
 pub struct DatabaseSettings {
-    pub username: String,
-    pub password: String,
+    pub username: secrecy::Secret<String>,
+    pub password: secrecy::Secret<String>,
     pub port: u16,
     pub host: String,
-    pub database_name: secrecy::Secret<String>,
+    pub database_name: String,
 }
 
 impl DatabaseSettings {
     pub fn connection_string(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
-            self.username,
-            self.password,
+            self.username.expose_secret(),
+            self.password.expose_secret(),
             self.host,
             self.port,
-            self.database_name.expose_secret()
+            self.database_name
         )
     }
 
     pub fn conn_string_no_db(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}",
-            self.username, self.password, self.host, self.port
+            self.username.expose_secret(),
+            self.password.expose_secret(),
+            self.host,
+            self.port
         )
     }
 }
